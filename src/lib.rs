@@ -72,36 +72,19 @@ mod domain {
         full_name: String,
     }
 
-    #[derive(Loadable)]
-    #[from(User, Bot)]
     pub struct UserBotPair(User, Bot);
 
-    impl User {
-        pub fn new(first_name: String, last_name: String) -> User {
-            User {
-                first_name,
-                last_name,
-            }
-        }
-
-        selection! {
-            first_name: String,
-            last_name: String
-        }
-
-        filter! {
-            kind "user"
+    impl UserBotPair {
+        pub fn map(users: Vec<User>, bots: Vec<Bot>) -> Vec<UserBotPair> {
+            // todo
+            vec![]
         }
     }
 }
 
 use domain::*;
-use serde_json::Value;
 
 pub fn main() {
-    let filter = Filter::by_owner_id("dan".into()).and(Filter::by_type("user".into()));
-    let selection = Selection(vec![Value::String("owner_id".to_string())]);
-
     // This just feels like a bad idea all around.
     // Load values
     let query = query! {
@@ -121,11 +104,11 @@ pub fn main() {
     let _ = infra::run(query);
 
     // Create new values
-    let value = Bot {
+    let new_bot = Bot {
         full_name: "bot 2".into(),
     };
 
-    let other_values = vec![
+    let new_bots = vec![
         Bot {
             full_name: "bot 3".into(),
         },
@@ -137,12 +120,39 @@ pub fn main() {
         },
     ];
 
+    let new_users = vec![User {
+        first_name: "dan".into(),
+        last_name: "person".into(),
+    }];
+
     let mutation = mutation! {
-        insert!(&value),
-        insert_many!(&other_values),
+        insert!(&new_bot),
+        insert_many!(&new_bots),
+        insert_many!(&new_users),
         invalidate_key("entites_with_names")
         and_then(query)
     };
 
-    let _ = infra::run(mutation);
+    let res = infra::run(mutation);
+
+    // [
+    //   {
+    //      user: {
+    //          first_name: "Dan",
+    //          last_name: "Person",
+    //      },
+    //      bot: {
+    //          full_name: "bot 1"
+    //      },
+    //   },
+    //   {
+    //      user: {
+    //          first_name: "Dan",
+    //          last_name: "Person",
+    //      },
+    //      bot: {
+    //          full_name: "bot 2"
+    //      },
+    //   },
+    // ]
 }
