@@ -14,3 +14,11 @@ Ideas to explore:
 - an api to define filters and selects
 
 There's probably a ton of prior art here that I should research before going any further.
+
+These ideas are an amalgomation of some books I've read over the past year:
+
+- the clean architecture
+- database internals
+- dynamodb book
+- designing data-intensive applications
+- seven databases in seven weeks
