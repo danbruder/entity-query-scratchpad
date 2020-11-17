@@ -25,3 +25,6 @@ These ideas are an amalgomation of some books I've read over the past year:
 
 I think the downfall of this idea is being limited by the dsl so that some business need ends up not expressable or is too complicated to make it worth it. Also if you are describing loading in your entity layer, is it an entity layer anymore?
 
+Maybe instead of being in the entity layer, they are in the use case layer.
+
+The case I'm thinking of specifically is where there is an entity that needs to be constructed from multiple infrastructure entities. Yeah, I think this stuff doesn't belong in the entity layer after all.
