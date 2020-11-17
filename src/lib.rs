@@ -60,6 +60,39 @@ mod domain {
             Box::new(Filter::And(Box::new(self), other))
         }
     }
+
+    #[derive(Loadable, Creatable)]
+    pub struct User {
+        first_name: String,
+        last_name: String,
+    }
+
+    #[derive(Loadable, Creatable)]
+    pub struct Bot {
+        full_name: String,
+    }
+
+    #[derive(Loadable)]
+    #[from(User, Bot)]
+    pub struct UserBotPair(User, Bot);
+
+    impl User {
+        pub fn new(first_name: String, last_name: String) -> User {
+            User {
+                first_name,
+                last_name,
+            }
+        }
+
+        selection! {
+            first_name: String,
+            last_name: String
+        }
+
+        filter! {
+            kind "user"
+        }
+    }
 }
 
 use domain::*;
@@ -69,48 +102,47 @@ pub fn main() {
     let filter = Filter::by_owner_id("dan".into()).and(Filter::by_type("user".into()));
     let selection = Selection(vec![Value::String("owner_id".to_string())]);
 
-    struct User {
-        first_name: String,
-        last_name: String,
-    }
-    struct Bot {
-        full_name: String,
-    }
-
-    let user_map_fn = |first_name: String, last_name: String| -> User {
-        User {
-            first_name,
-            last_name,
-        }
-    };
-
-    let bot_map_fn = |full_name: String| -> Bot { Bot { full_name } };
-    let both_map_fn = |users: Vec<User>, bots: Vec<Bot>| -> Vec<(User, Bot)> { vec![] };
-
     // This just feels like a bad idea all around.
+    // Load values
     let query = query! {
-        sub_query! {
+        query! {
             filter {
                 by_owner_id("dan"),
-                by_type("user"),
             }
-            select {
-                first_name: String
-                last_name: String
-            }
-            map(map_fn)
+            extends User::query
         },
-        sub_query! {
-            filter {
-                by_type("bot"),
-            }
-            select {
-                full_name: String
-            }
-            map(bot_map_fn)
+        query! {
+            extends Bot::query
         },
-        map(both_map_fn)
+        map(UserBotPairs::new),
+        cache_key(UserBotPairs::cache_key)
     };
 
     let _ = infra::run(query);
+
+    // Create new values
+    let value = Bot {
+        full_name: "bot 2".into(),
+    };
+
+    let other_values = vec![
+        Bot {
+            full_name: "bot 3".into(),
+        },
+        Bot {
+            full_name: "bot 4".into(),
+        },
+        Bot {
+            full_name: "bot 5".into(),
+        },
+    ];
+
+    let mutation = mutation! {
+        insert!(&value),
+        insert_many!(&other_values),
+        invalidate_key("entites_with_names")
+        and_then(query)
+    };
+
+    let _ = infra::run(mutation);
 }

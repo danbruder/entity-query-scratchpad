@@ -22,3 +22,6 @@ These ideas are an amalgomation of some books I've read over the past year:
 - dynamodb book
 - designing data-intensive applications
 - seven databases in seven weeks
+
+I think the downfall of this idea is being limited by the dsl so that some business need ends up not expressable or is too complicated to make it worth it. Also if you are describing loading in your entity layer, is it an entity layer anymore?
+
